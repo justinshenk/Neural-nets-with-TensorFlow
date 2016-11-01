@@ -27,7 +27,23 @@ def pre_process_data(data):
     data /= np.std(data) # == sqrt(cov(data))
     return data
 
+def forward_passs(x, weights):
+            o0 = sigmoid(weights[0] * x)
+            o1 = sigmoid(weights[1] * o0)
+            return y0, y1
+
+def backpropagate(x, o0, o1, weights, t, learning_rate):
+    # tried to follow Mitchell and replace the activation function, not sure if
+    # correct
+    delta1 = -(t - o1) * sigmoid(o0 * weights[1], derive=True)
+    delta_w1 = -learning_rate * delta1 * o0
+    delta0 = sigmoid(x * weights[0], derive=True) * delta1 * weights[0]
+    delta_w0 = learning_rate * delta0 * x
+    return delta0, delta1
+    
 if __name__ == "__main__":
     data, targets = generate_data()
     data = pre_process_data(data)
     weights = np.random.normal(loc=0, scale=1/np.sqrt(2), size=2)
+    
+
