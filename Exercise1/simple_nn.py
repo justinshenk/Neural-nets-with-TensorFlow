@@ -25,9 +25,7 @@ def sigmoid(z, derive=False):
 
 def network_fun(x, weights):
     #return logistic(weights[1] * logistic(weights[0] * x))
-    # dont tell me why there has to be a minus in front, but otherwise
-    # the targetvalues are swapped
-    return -sigmoid(weights[1] * sigmoid(weights[0] * x))
+    return sigmoid(weights[1] * sigmoid(weights[0] * x))
 
 def generate_data(sampleSize=30):
     cats = np.random.normal(25, 5, sampleSize)
@@ -53,22 +51,10 @@ def forward_pass(x, weights):
     return o0, o1
 
 def backpropagate(x, o0, o1, weights, t, learning_rate):
-    # o1 = output of last neuron
-    # o0 = output from first to outputneuron
-    # delta1 = o1 * (1 - o1) * (t - o1)
-    # delta0 = o0 * (1 - o0) * weights[0] * delta1
-    # delta_w0 = learning_rate * delta0 * x
-    # delta_w1 = learning_rate * delta1 * o0
-    # return np.array([delta_w0, delta_w1])
-
-
-    # tried to follow Mitchell and replace the activation function, not sure if
-    # correct
-    # the minus in front was wrong
-    # delta1 = -(t - o1) * sigmoid(o0 * weights[1], derive=True)
+    # from Mitchell
     delta1 = (t - o1) * sigmoid(o0 * weights[1], derive=True)
     delta0 = sigmoid(x*weights[0], derive = True) * weights[0] * delta1
-    delta_w1 = -learning_rate * delta1 * o0
+    delta_w1 = learning_rate * delta1 * o0
     delta_w0 = learning_rate * delta0 * x
     return delta_w0, delta_w1
 
