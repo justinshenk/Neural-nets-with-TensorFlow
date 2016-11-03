@@ -4,7 +4,7 @@ __author__    = "Rasmus Diederichsen"
 __date__      = "2016-11-01"
 __email__     = "rdiederichse@uos.de"
 
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 np.random.seed(1)
@@ -25,7 +25,7 @@ def network_fun(x, weights):
     return logistic(weights[1] * logistic(weights[0] * x))
 
 def generate_data(sampleSize=30):
-    cats = np.random.normal(35, 5, sampleSize)
+    cats = np.random.normal(25, 5, sampleSize)
     dogs = np.random.normal(45, 15, sampleSize)
     data = np.concatenate((cats,dogs))
     targets = np.concatenate((np.ones(sampleSize), np.zeros(sampleSize)))
@@ -75,12 +75,10 @@ def stochastic_gradient_descent(data, targets, learning_rate=.05):
 def classify(x, weights):
     return network_fun(x, weights)
 
-    
+
 if __name__ == "__main__":
     data, targets = generate_data()
     data = pre_process_data(data)
     trained_weights = stochastic_gradient_descent(data, targets)
     print("data[0] = {}, targets[0] = {}\nnetwork says {}".format(data[0],
         targets[0], classify(data[0], trained_weights)))
-
-
