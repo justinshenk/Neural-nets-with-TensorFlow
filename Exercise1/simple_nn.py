@@ -5,6 +5,7 @@ __date__      = "2016-11-01"
 __email__     = "rdiederichse@uos.de"
 
 import numpy as np
+from numpy import linspace
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 np.random.seed(1)
@@ -52,6 +53,7 @@ def forward_pass(x, weights):
 
 def backpropagate(x, o0, o1, weights, t, learning_rate):
     # from Mitchell
+    # costs_over_time.append(0.5*(t-o1)**2)
     delta1 = (t - o1) * sigmoid(o0 * weights[1], derive=True)
     delta0 = sigmoid(x*weights[0], derive = True) * weights[0] * delta1
     delta_w1 = learning_rate * delta1 * o0
@@ -63,14 +65,18 @@ def stochastic_gradient_descent(data, targets, learning_rate=.1):
     # weights = np.random.normal(loc=0, scale=1/np.sqrt(2), size=2)
     weights = np.random.uniform(low=-.05,high=.05, size=2)
     n = len(targets)
-    for k in range(100000):
+    for k in range(10000):
         index = np.random.randint(low=0, high=n)
         o0, o1 = forward_pass(data[index], weights)
         weights += backpropagate(data[index], o0, o1, weights, targets[index], learning_rate)
+        weights_over_time.append(np.array(weights))
     return weights
 
 def classify(x, weights):
     return network_fun(x, weights)
+
+def calcError(weights):
+    return sum(0.5*(targets-classify(data, weights))**2)
 
 def printdata(index):
     #print("data[",index,"] = {}, target = {}\nnetwork says {}".format(data[index],
@@ -81,11 +87,44 @@ def printdata(index):
 if __name__ == "__main__":
     data, targets = generate_data()
     data = pre_process_data(data)
+    weights_over_time = []
+    # costs aka error
+    # costs_over_time = []
     trained_weights = stochastic_gradient_descent(data, targets)
-    X = trained_weights[0]
-    Y = trained_weights[1]
-    print("X: ",X, " Y: ", Y)
-    printdata(0)
-    printdata(1)
-    printdata(55)
-    printdata(56)
+    #X = trained_weights[0]
+    #Y = trained_weights[1]
+    #print("X: ",X, " Y: ", Y)
+    # printdata(0)
+    # printdata(1)
+    # printdata(55)
+    # printdata(56)
+
+    weights_over_time = np.asarray(weights_over_time)
+    # print("weights_over_time", weights_over_time)
+    # print("costs_over_time", costs_over_time[len(costs_over_time)-1])
+    # print(weights_over_time.shape)
+    X = weights_over_time[:, 0]
+    Y = weights_over_time[:, 1]
+    Z = np.zeros((len(X),len(Y)))
+    print(range(len(X)))
+    for i in range(len(X)):
+        for j in range(len(Y)):
+            w0 = X[i]
+            w1 = Y[j]
+            Z[i,j] = calcError(weights=[w0, w1])
+
+    # print("X",X, "Y", Y)
+    # xx, yy = np.meshgrid(X, Y, sparse=True)
+    # print("xx", xx.shape, "yy", yy.shape)
+    # Change what Z is
+    # Z = error
+
+    # Z = np.sin(xx ** 2 + yy ** 2) / (xx ** 2 + yy ** 2)
+    print("Z", Z)
+
+    # The Plot
+    # plt.figure()
+    # cp = plt.contourf(X, Y, Z)
+    # plt.colorbar(cp)
+    # plt.contour(X, Y, Z, colors="black", linestyles = "dashed")
+    # plt.show()
