@@ -1,6 +1,6 @@
 # coding=utf-8
 
-__author__    = "Rasmus Diederichsen"
+__author__    = "Rasmus Diederichsen, Kevin Trebing"
 __date__      = "2016-11-01"
 __email__     = "rdiederichse@uos.de"
 
@@ -16,15 +16,11 @@ def logistic(z, derive=False):
         return 1 / (1 + np.exp(-z))
 
 def sigmoid(z, derive=False):
-    # from LeCun
-    # fun          = 1.7159 * np.tanh(2/3 * z)
-    # derivative_1 = 1.7159 * 2/3 * 1/np.cosh(z)**2 # float div is python3 only
     fun          = np.tanh(2/3 * z)
     derivative_1 = 2/3 * 1/np.cosh(z)**2 # float div is python3 only
     return derivative_1 if derive else fun
 
 def network_fun(x, weights):
-    #return logistic(weights[1] * logistic(weights[0] * x))
     return sigmoid(weights[1] * sigmoid(weights[0] * x))
 
 def generate_data(sampleSize=30):
@@ -33,7 +29,6 @@ def generate_data(sampleSize=30):
     data = np.concatenate((cats,dogs))
     # target_values from -1 to 1
     targets = np.concatenate((np.full(sampleSize, -1, dtype=int),(np.ones(sampleSize))))
-    #targets = np.concatenate((np.ones(sampleSize), np.zeros(sampleSize)))
     return data, targets
 
 def pre_process_data(data):
@@ -43,9 +38,6 @@ def pre_process_data(data):
     return data # not sure if data is copied
 
 def forward_pass(x, weights):
-    # o0 = logistic(weights[0] * x)
-    # o1 = logistic(weights[1] * o0)
-    # return o0, o1
     o0 = sigmoid(weights[0] * x)
     o1 = sigmoid(weights[1] * o0)
     return o0, o1
@@ -73,8 +65,6 @@ def classify(x, weights):
     return network_fun(x, weights)
 
 def printdata(index):
-    #print("data[",index,"] = {}, target = {}\nnetwork says {}".format(data[index],
-    #    targets[index], classify(data[index], trained_weights)))
     print("data[{}]: target = {} \nnetwork says: {}".format(index,
         targets[index], classify(data[index], trained_weights)))
 
