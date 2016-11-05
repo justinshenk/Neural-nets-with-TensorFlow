@@ -105,18 +105,19 @@ if __name__ == "__main__":
     # print(weights_over_time.shape)
     X = weights_over_time[:, 0]
     Y = weights_over_time[:, 1]
+    print("X min", np.min(X), "X max", np.max(X), "Y min", np.min(Y), "Y max", np.max(Y))
     Z = np.zeros((len(X),len(Y)))
     print(range(len(X)))
     for i in range(len(X)):
         if (i%50==0):
-            print(i)
+            print(i/len(X)*100,"% finished")
         for j in range(len(Y)):
             w0 = X[i]
             w1 = Y[j]
             # maybe alle rechnungen hier hin verlagern?
             Z[i,j] = calcError(weights=[w0, w1])
 
-    # print("X",X, "Y", Y)
+
     # xx, yy = np.meshgrid(X, Y, sparse=True)
     # print("xx", xx.shape, "yy", yy.shape)
     # Change what Z is
@@ -131,3 +132,10 @@ if __name__ == "__main__":
     plt.colorbar(cp)
     plt.contour(X, Y, Z, colors="black", linestyles = "dashed")
     plt.show()
+
+    # 3D Plot
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection="3d")
+    # cp = ax.plot_surface(X, Y, Z, cmap = plt.cm.coolwarm)
+    # plt.colorbar(cp)
+    # plt.show()
