@@ -111,6 +111,7 @@ if __name__ == "__main__":
         for j in range(len(Y)):
             w0 = X[i]
             w1 = Y[j]
+            # maybe alle rechnungen hier hin verlagern?
             Z[i,j] = calcError(weights=[w0, w1])
 
     # print("X",X, "Y", Y)
