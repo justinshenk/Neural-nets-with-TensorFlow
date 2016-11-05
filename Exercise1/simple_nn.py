@@ -115,16 +115,11 @@ if __name__ == "__main__":
             w0 = X[i]
             w1 = Y[j]
             # maybe alle rechnungen hier hin verlagern?
-            Z[i,j] = calcError(weights=[w0, w1])
-
-
-    # xx, yy = np.meshgrid(X, Y, sparse=True)
-    # print("xx", xx.shape, "yy", yy.shape)
-    # Change what Z is
-    # Z = error
+            # Z[i,j] = calcError(weights=[w0, w1])
+            Z[i,j] = sum(0.5 * (targets - np.tanh(2 / 3 * w1 * np.tanh(2 / 3 * w0 * data))) ** 2)
 
     # Z = np.sin(xx ** 2 + yy ** 2) / (xx ** 2 + yy ** 2)
-    print("Z", Z)
+    # print("Z", Z)
 
     # The Plot
     plt.figure()
