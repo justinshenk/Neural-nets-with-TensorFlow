@@ -65,7 +65,7 @@ def stochastic_gradient_descent(data, targets, learning_rate=.1):
     # weights = np.random.normal(loc=0, scale=1/np.sqrt(2), size=2)
     weights = np.random.uniform(low=-.05,high=.05, size=2)
     n = len(targets)
-    for k in range(10000):
+    for k in range(1000):
         index = np.random.randint(low=0, high=n)
         o0, o1 = forward_pass(data[index], weights)
         weights += backpropagate(data[index], o0, o1, weights, targets[index], learning_rate)
@@ -108,6 +108,8 @@ if __name__ == "__main__":
     Z = np.zeros((len(X),len(Y)))
     print(range(len(X)))
     for i in range(len(X)):
+        if (i%50==0):
+            print(i)
         for j in range(len(Y)):
             w0 = X[i]
             w1 = Y[j]
@@ -124,8 +126,8 @@ if __name__ == "__main__":
     print("Z", Z)
 
     # The Plot
-    # plt.figure()
-    # cp = plt.contourf(X, Y, Z)
-    # plt.colorbar(cp)
-    # plt.contour(X, Y, Z, colors="black", linestyles = "dashed")
-    # plt.show()
+    plt.figure()
+    cp = plt.contourf(X, Y, Z)
+    plt.colorbar(cp)
+    plt.contour(X, Y, Z, colors="black", linestyles = "dashed")
+    plt.show()
