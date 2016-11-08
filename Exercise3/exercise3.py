@@ -55,16 +55,43 @@ def plot_some_digits(d_train, l_train):
         axarr_linear[i].text(-10,20,"{}".format(l_train[index]))
     plt.show()
     
+def minibatches(data, labels, batch_size=1000):
+    """Data must be in Nx784 shape.
+    Return randomly shuffled minibatches
+    """
+    assert data.shape[0] == len(labels)
+    indices = np.random.permutation(data.shape[0])
+    data = data[indices, :]
+    labels = labels[indices]
+    for batch in np.arange(0, data.shape[0], batch_size):
+        if batch + batch_size > data.shape[0]: # if data size does not divide evenly, make final batch smaller
+            batch_size = data.shape[0] - batch
+        yield (
+                data[batch:batch+batch_size,:],
+                tf.one_hot(labels[batch:batch+batch_size], 10).eval()
+                )
+
 
 if __name__ == "__main__":
     d_train, l_train, d_test, l_test, d_val, l_val = import_data()
+    batch_size = 100
 
-    plot_some_digits(d_train, l_train)
-    W = tf.Variable(tf.random_normal([28*28,10]))
-    b = tf.Variable(tf.random_normal([10,1]), trainable=False)
-    x = tf.placeholder(tf.float32, [1,28*28])
-    y = tf.nn.softmax(tf.add(tf.matmul(x,W), b))
+    # plot_some_digits(d_train, l_train)
+    W = tf.Variable(tf.zeros([28 * 28, 10]))
+    b = tf.Variable(tf.zeros([10]))
+    x = tf.placeholder(tf.float32, [None, 28 * 28])
+    d = tf.placeholder(tf.int32, [None, 10])
+    y = tf.nn.softmax(tf.matmul(x,W) + b)
+    # cost = tf.reduce_sum(tf.mul(tf.constant(0.5), tf.square(tf.sub(d, y))))
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(tf.matmul(x, W) + b, d)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5) 
+    minimizer = optimizer.minimize(cross_entropy)
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
-        out = sess.run(y, feed_dict={x: np.reshape(d_train[0,:,:], (-1,28*28))})
+        for iteration in range(50):
+            for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
+                minimizer.run(feed_dict={x: mb, d: labels})
+        _y = sess.run(y, feed_dict={x: np.asmatrix(d_train[:5,:]), d: labels[:5]})
+        print(_y)
+        print(labels[:5])
 
