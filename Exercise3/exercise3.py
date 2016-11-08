@@ -55,6 +55,11 @@ def plot_some_digits(d_train, l_train):
         axarr_linear[i].text(-10,20,"{}".format(l_train[index]))
     plt.show()
     
+def one_hot(vector, slots):
+    arr = np.zeros((len(vector), slots))
+    arr[range(len(vector)), vector] = 1
+    return arr;
+
 def minibatches(data, labels, batch_size=1000):
     """Data must be in Nx784 shape.
     Return randomly shuffled minibatches
@@ -68,7 +73,7 @@ def minibatches(data, labels, batch_size=1000):
             batch_size = data.shape[0] - batch
         yield (
                 data[batch:batch+batch_size,:],
-                tf.one_hot(labels[batch:batch+batch_size], 10).eval()
+                one_hot(labels[batch:batch+batch_size], 10)
                 )
 
 
@@ -93,5 +98,5 @@ if __name__ == "__main__":
                 minimizer.run(feed_dict={x: mb, d: labels})
         correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(d, 1))
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-        print("accuracy: %f" % accuracy.eval({x: d_test, d: tf.one_hot(l_test, 10).eval()}))
+        print("accuracy: %f" % accuracy.eval({x: d_test, d: one_hot(l_test, 10)}))
 
