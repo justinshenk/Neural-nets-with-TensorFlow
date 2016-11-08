@@ -88,10 +88,10 @@ if __name__ == "__main__":
     minimizer = optimizer.minimize(cross_entropy)
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
-        for iteration in range(50):
+        for iteration in range(10):
             for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
                 minimizer.run(feed_dict={x: mb, d: labels})
-        _y = sess.run(y, feed_dict={x: np.asmatrix(d_train[:5,:]), d: labels[:5]})
-        print(_y)
-        print(labels[:5])
+        correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(d, 1))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+        print("accuracy: %f" % accuracy.eval({x: d_test, d: tf.one_hot(l_test, 10).eval()}))
 
