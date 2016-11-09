@@ -27,19 +27,23 @@ class MNIST():
                 labels = np.fromfile(fd, dtype = 'uint8')
                 return labels
 
-def import_data(split=2):
+def import_data():
+    n_train = 55000
     m                 = MNIST()
-    data_train        = m.trainingData
-    labels_train      = m.trainingLabels
+    data_train        = m.trainingData[:n_train]
+    labels_train      = m.trainingLabels[:n_train]
 
-    # make a 50/50 test-validation split
-    n_test            = len(m.testData)
-    data_test         = m.testData[:n_test//split]
-    labels_test       = m.testLabels[n_test//split:]
-    data_validation   = m.testData[n_test//split:]
-    labels_validation = m.testLabels[n_test//split:]
+    data_test         = m.testData
+    labels_test       = m.testLabels
+    data_validation   = m.trainingData[n_train:]
+    labels_validation = m.trainingLabels[n_train:]
 
-    return data_train, labels_train, data_test, labels_test, data_validation, labels_validation
+    return data_train, labels_train, data_test, labels_test#, data_validation, labels_validation
+
+def import_data_tf():
+    from tensorflow.examples.tutorials.mnist import input_data
+    mnist = input_data.read_data_sets('/tmp/data', one_hot=False)
+    return mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
 
 def plot_some_digits(d_train, l_train):
     f, axarr = plt.subplots(5,2)
@@ -78,25 +82,53 @@ def minibatches(data, labels, batch_size=1000):
 
 
 if __name__ == "__main__":
-    d_train, l_train, d_test, l_test, d_val, l_val = import_data()
+
+    # load the data
+    d_train, l_train, d_test, l_test = import_data()
+    # d_train_tf, l_train_tf, d_test_tf, l_test_tf = import_data_tf()
+    # print("Are datasets equal? {}".format((d_train == d_train_tf).all()))
+
     batch_size = 100
 
     # plot_some_digits(d_train, l_train)
+
+    # Weight matrix
     W = tf.Variable(tf.zeros([28 * 28, 10]))
+
+    # bias vector
     b = tf.Variable(tf.zeros([10]))
+
+    # data vector
     x = tf.placeholder(tf.float32, [None, 28 * 28])
+
+    # desired output (ie real labels)
     d = tf.placeholder(tf.int32, [None, 10])
-    y = tf.nn.softmax(tf.matmul(x,W) + b)
-    # cost = tf.reduce_sum(tf.mul(tf.constant(0.5), tf.square(tf.sub(d, y))))
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(tf.matmul(x, W) + b, d)
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5) 
-    minimizer = optimizer.minimize(cross_entropy)
+
+    # computed output of the network
+    y = tf.matmul(x,W) + b
+
+    # loss function
+    cross_entropy      = tf.nn.softmax_cross_entropy_with_logits(y, d)
+    optimizer          = tf.train.GradientDescentOptimizer(learning_rate=0.5)
+    training_step      = optimizer.minimize(cross_entropy)
+
+    # check if neuron firing strongest coinceds with max value position in real
+    # labels
+    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(d, 1))
+    accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
-        for iteration in range(10):
+        print("Training on my data.")
+        for _ in range(30):
             for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
-                minimizer.run(feed_dict={x: mb, d: labels})
-        correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(d, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-        print("accuracy: %f" % accuracy.eval({x: d_test, d: one_hot(l_test, 10)}))
+                sess.run(training_step, feed_dict={x: mb, d: labels})
+        print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)}))
 
+    # with tf.Session() as sess:
+    #     sess.run(tf.initialize_all_variables())
+    #     print("Training on tf data.")
+    #     for _ in range(30):
+    #         for mb, labels in minibatches(d_train_tf, l_train_tf, batch_size=batch_size):
+    #             sess.run(training_step, feed_dict={x: mb, d: labels})
+    #     print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test_tf, d: one_hot(l_test_tf, 10)}))
