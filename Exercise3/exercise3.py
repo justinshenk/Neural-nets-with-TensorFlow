@@ -6,18 +6,18 @@ import struct
 
 class MNIST():
     def __init__(self, directory = "./"):
-        self.testData = np.reshape(self._load(directory + "t10k-images-idx3-ubyte"), (-1,28**2))
-        self.testLabels = self._load(directory + "t10k-labels-idx1-ubyte", True)
-        self.trainingData = np.reshape(self._load(directory + "train-images-idx3-ubyte"), (-1,28**2))
-        self.trainingLabels = self._load(directory + "train-labels-idx1-ubyte", True)
-    
+        self.testData = np.reshape(self._load(directory + "t10k-images.idx3-ubyte"), (-1,28**2))
+        self.testLabels = self._load(directory + "t10k-labels.idx1-ubyte", True)
+        self.trainingData = np.reshape(self._load(directory + "train-images.idx3-ubyte"), (-1,28**2))
+        self.trainingLabels = self._load(directory + "train-labels.idx1-ubyte", True)
+
     def _load(self, path, labels = False):
-        
+
         with open(path, "rb") as fd:
             magic, numberOfItems = struct.unpack(">ii", fd.read(8))
             if (not labels and magic != 2051) or (labels and magic != 2049):
                 raise LookupError("Not a MNIST file")
-            
+
             if not labels:
                 rows, cols = struct.unpack(">II", fd.read(8))
                 images = np.fromfile(fd, dtype = 'uint8')
@@ -58,7 +58,7 @@ def plot_some_digits(d_train, l_train):
         axarr_linear[i].imshow(np.reshape(d_train[index,:], (28,28)), cmap='gray')
         axarr_linear[i].text(-10,20,"{}".format(l_train[index]))
     plt.show()
-    
+
 def one_hot(vector, slots):
     arr = np.zeros((len(vector), slots))
     arr[range(len(vector)), vector] = 1
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     # d_train_tf, l_train_tf, d_test_tf, l_test_tf = import_data_tf()
     # print("Are datasets equal? {}".format((d_train == d_train_tf).all()))
 
-    batch_size = 100
+    batch_size = 1000
 
     # plot_some_digits(d_train, l_train)
 
@@ -117,13 +117,26 @@ if __name__ == "__main__":
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(d, 1))
     accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    # plot_some_digits(d_train, l_train)
+    training_step_accuracy = []
+    # validation_accuracy = []
+
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         print("Training on my data.")
-        for _ in range(30):
+        for _ in range(1000):
             for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
                 sess.run(training_step, feed_dict={x: mb, d: labels})
+            current_accuracy = sess.run(accuracy, feed_dict={x: d_train, d: one_hot(l_train, 10)})
+            training_step_accuracy.append(current_accuracy)
+            # current_validation_accuracy = sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)})
+            # validation_accuracy.append(current_validation_accuracy)
         print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)}))
+
+
+    plt.plot(training_step_accuracy, color = "b")
+    # plt.plot(validation_accuracy, color = "r")
+    plt.show()
 
     # with tf.Session() as sess:
     #     sess.run(tf.initialize_all_variables())
