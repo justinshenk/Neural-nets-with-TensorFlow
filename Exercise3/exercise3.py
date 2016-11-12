@@ -69,12 +69,7 @@ def plot_some_digits(d_train, l_train):
     for i, index in enumerate(indices):
         axarr_linear[i].imshow(np.reshape(d_train[index,:], (28,28)), cmap='gray')
         axarr_linear[i].text(-10,20,"{}".format(l_train[index]))
-<<<<<<< HEAD
-    plt.show()
 
-=======
-    
->>>>>>> 1c4dc387124473e1c1bb5fcc07c8fa2f2393237b
 def one_hot(vector, slots):
     arr = np.zeros((len(vector), slots))
     arr[range(len(vector)), vector] = 1
@@ -141,24 +136,16 @@ def main():
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         print("Training on my data.")
-<<<<<<< HEAD
-        for _ in range(1000):
+        for i in range(500):
             for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
                 sess.run(training_step, feed_dict={x: mb, d: labels})
             current_accuracy = sess.run(accuracy, feed_dict={x: d_train, d: one_hot(l_train, 10)})
             training_step_accuracy.append(current_accuracy)
-            # current_validation_accuracy = sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)})
-            # validation_accuracy.append(current_validation_accuracy)
-=======
-        for i in range(50):
-            for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
-                sess.run(training_step, feed_dict={x: mb, d: labels})
             if i > 1 and i % 10 == 0:
                 current_weights = W.eval()
                 plot_weights(current_weights)
 
         plt.show()
->>>>>>> 1c4dc387124473e1c1bb5fcc07c8fa2f2393237b
         print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)}))
 
 
