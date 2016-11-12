@@ -45,6 +45,18 @@ def import_data_tf():
     mnist = input_data.read_data_sets('/tmp/data', one_hot=False)
     return mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
 
+def plot_weights(current_weights):
+    f, axarr = plt.subplots(2,5)
+    f.tight_layout()
+    f.subplots_adjust(hspace=.05, wspace=.05)
+    axarr_linear = np.reshape(axarr, 10)
+    plt.setp([a.get_xticklabels() for a in axarr_linear], visible=False)
+    plt.setp([a.get_yticklabels() for a in axarr_linear], visible=False)
+
+    for col in range(current_weights.shape[1]):
+        weights = np.reshape(current_weights[:,col], (28,28))
+        axarr_linear[col].imshow(weights, cmap='seismic')
+
 def plot_some_digits(d_train, l_train):
     f, axarr = plt.subplots(5,2)
     f.tight_layout()
@@ -57,8 +69,12 @@ def plot_some_digits(d_train, l_train):
     for i, index in enumerate(indices):
         axarr_linear[i].imshow(np.reshape(d_train[index,:], (28,28)), cmap='gray')
         axarr_linear[i].text(-10,20,"{}".format(l_train[index]))
+<<<<<<< HEAD
     plt.show()
 
+=======
+    
+>>>>>>> 1c4dc387124473e1c1bb5fcc07c8fa2f2393237b
 def one_hot(vector, slots):
     arr = np.zeros((len(vector), slots))
     arr[range(len(vector)), vector] = 1
@@ -81,7 +97,7 @@ def minibatches(data, labels, batch_size=1000):
                 )
 
 
-if __name__ == "__main__":
+def main():
 
     # load the data
     d_train, l_train, d_test, l_test = import_data()
@@ -104,13 +120,14 @@ if __name__ == "__main__":
     # desired output (ie real labels)
     d = tf.placeholder(tf.int32, [None, 10])
 
-    # computed output of the network
+    # computed output of the network without activation (?? otherwise can't use
+    # tf.nn.softmax_..). Does this only work because there is just one layer?
     y = tf.matmul(x,W) + b
 
     # loss function
-    cross_entropy      = tf.nn.softmax_cross_entropy_with_logits(y, d)
-    optimizer          = tf.train.GradientDescentOptimizer(learning_rate=0.5)
-    training_step      = optimizer.minimize(cross_entropy)
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, d)
+    optimizer     = tf.train.GradientDescentOptimizer(learning_rate=0.5)
+    training_step = optimizer.minimize(cross_entropy)
 
     # check if neuron firing strongest coinceds with max value position in real
     # labels
@@ -124,6 +141,7 @@ if __name__ == "__main__":
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         print("Training on my data.")
+<<<<<<< HEAD
         for _ in range(1000):
             for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
                 sess.run(training_step, feed_dict={x: mb, d: labels})
@@ -131,6 +149,16 @@ if __name__ == "__main__":
             training_step_accuracy.append(current_accuracy)
             # current_validation_accuracy = sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)})
             # validation_accuracy.append(current_validation_accuracy)
+=======
+        for i in range(50):
+            for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
+                sess.run(training_step, feed_dict={x: mb, d: labels})
+            if i > 1 and i % 10 == 0:
+                current_weights = W.eval()
+                plot_weights(current_weights)
+
+        plt.show()
+>>>>>>> 1c4dc387124473e1c1bb5fcc07c8fa2f2393237b
         print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)}))
 
 
@@ -145,3 +173,6 @@ if __name__ == "__main__":
     #         for mb, labels in minibatches(d_train_tf, l_train_tf, batch_size=batch_size):
     #             sess.run(training_step, feed_dict={x: mb, d: labels})
     #     print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test_tf, d: one_hot(l_test_tf, 10)}))
+
+if __name__ == "__main__":
+    main()
