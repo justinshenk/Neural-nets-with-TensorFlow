@@ -136,30 +136,24 @@ def main():
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         print("Training on my data.")
-        for i in range(500):
+        for i in range(200):
             for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
                 sess.run(training_step, feed_dict={x: mb, d: labels})
             current_accuracy = sess.run(accuracy, feed_dict={x: d_train, d: one_hot(l_train, 10)})
             training_step_accuracy.append(current_accuracy)
+            # print("Current accuracy %f" % current_accuracy)
             if i > 1 and i % 10 == 0:
                 current_weights = W.eval()
                 plot_weights(current_weights)
 
         plt.show()
-        print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)}))
+        print("Final accuracy: %f" % sess.run(accuracy, feed_dict={x: d_train,
+            d: one_hot(l_train, 10)}))
 
 
     plt.plot(training_step_accuracy, color = "b")
-    # plt.plot(validation_accuracy, color = "r")
+    plt.gca().set_ylim([0,1])
     plt.show()
-
-    # with tf.Session() as sess:
-    #     sess.run(tf.initialize_all_variables())
-    #     print("Training on tf data.")
-    #     for _ in range(30):
-    #         for mb, labels in minibatches(d_train_tf, l_train_tf, batch_size=batch_size):
-    #             sess.run(training_step, feed_dict={x: mb, d: labels})
-    #     print("accuracy: %f" % sess.run(accuracy, feed_dict={x: d_test_tf, d: one_hot(l_test_tf, 10)}))
 
 if __name__ == "__main__":
     main()
