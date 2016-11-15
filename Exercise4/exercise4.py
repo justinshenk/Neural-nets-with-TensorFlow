@@ -1,4 +1,4 @@
-from utils import load_mnist_data, minibatches
+from utils import load_mnist_data, minibatches, one_hot
 import tensorflow as tf
 from progressbar import * # sudo pip3 install progressbar33
 

@@ -3,6 +3,8 @@ import tensorflow as tf
 from numpy.random import random_integers
 import matplotlib.pyplot as plt
 import struct
+from progressbar import * # sudo pip3 install progressbar33
+
 
 class MNIST():
     def __init__(self, directory = "./"):
@@ -136,19 +138,26 @@ def main():
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         print("Training on my data.")
-        for i in range(200):
+        widgets = ['Training: ', Percentage(), ' ', AnimatedMarker(markers='←↖↑↗→↘↓↙'), ' ', ETA()]
+        n_iter  = 1000 # must be >= 10
+        pbar    = ProgressBar(widgets=widgets, maxval=n_iter).start()
+        for i in range(n_iter):
             for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
                 sess.run(training_step, feed_dict={x: mb, d: labels})
             current_accuracy = sess.run(accuracy, feed_dict={x: d_train, d: one_hot(l_train, 10)})
             training_step_accuracy.append(current_accuracy)
+            pbar.update(i)
             # print("Current accuracy %f" % current_accuracy)
-            if i > 1 and i % 10 == 0:
+            if i > 1 and i % (n_iter // 10) == 0:
                 current_weights = W.eval()
                 plot_weights(current_weights)
 
+        pbar.finish()
         plt.show()
-        print("Final accuracy: %f" % sess.run(accuracy, feed_dict={x: d_train,
-            d: one_hot(l_train, 10)}))
+        print("Final test accuracy: %f" % sess.run(accuracy, feed_dict={x:
+            d_test, d: one_hot(l_test, 10)}))
+        print("min/max training accuracy: %f/%f" %
+                (np.min(training_step_accuracy), np.max(training_step_accuracy)))
 
 
     plt.plot(training_step_accuracy, color = "b")
