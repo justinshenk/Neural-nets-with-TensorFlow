@@ -5,9 +5,8 @@ from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 if __name__ == "__main__":
-    d_train, l_train, d_test, l_test, d_val, l_val = load_mnist_data()
     batch_size = 50
-    n_epochs = 10000
+    n_epochs   = 10000
 
     ############################################################################
     #                              Define network                              #
@@ -21,8 +20,10 @@ if __name__ == "__main__":
 
     # Apply convolution kernels to input x
     convolution1 = tf.nn.conv2d(x, kernels1, strides=[1,1,1,1], padding="SAME")
+
     # Calculate neuron outputs by applying the activation1 function
     conv1 = activation1 = tf.nn.tanh(convolution1 + bias1)
+
     # Apply max pooling to outputs
     pool1 = tf.nn.max_pool(activation1, ksize=[1,2,2,1], strides=[1,2,2,1], padding="SAME")
 
@@ -34,17 +35,17 @@ if __name__ == "__main__":
     convolution2    = tf.nn.conv2d(pool1, kernels2, strides=[1,1,1,1], padding="SAME")
     conv2           = activation2 = tf.nn.tanh(convolution2 + bias2)
     pool2           = tf.nn.max_pool(activation2, ksize=[1,2,2,1],
-            strides=[1,2,2,1], padding="SAME") # question: how do I select the kernel sizes for pooling or convolution?
+                                        strides=[1,2,2,1], padding="SAME") # question: how do I select the kernel sizes for pooling or convolution?
 
     # first FF layer
-    bias3  = tf.Variable(tf.constant(.1, shape=[1024]))
+    bias3        = tf.Variable(tf.constant(.1, shape=[1024]))
     ffn3_weights = tf.Variable(tf.truncated_normal([7 * 7 * 64, 1024]))
-    activation3 = tf.nn.tanh(tf.matmul(tf.reshape(pool2, [-1, 7 * 7 * 64]), ffn3_weights) + bias3)
+    activation3  = tf.nn.tanh(tf.matmul(tf.reshape(pool2, [-1, 7 * 7 * 64]), ffn3_weights) + bias3)
      
-    # seconf FF layer (readout)
-    bias4  = tf.Variable(tf.constant(.1, shape=[10]))
+    # second FF layer (readout)
+    bias4        = tf.Variable(tf.constant(.1, shape=[10]))
     ffn4_weights = tf.Variable(tf.truncated_normal([1024, 10]))
-    y = activation4 = tf.matmul(activation3, ffn4_weights) + bias4
+    y            = activation4 = tf.matmul(activation3, ffn4_weights) + bias4
 
     ############################################################################
     #                         Define training process                          #
@@ -63,7 +64,7 @@ if __name__ == "__main__":
     # check if neuron firing strongest coincides with max value position in real
     # labels
     correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(d,1))
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     
     ############################################################################
     #                              Train the net                               #
@@ -74,10 +75,6 @@ if __name__ == "__main__":
         widgets = ['Training: ', Percentage(), ' ', AnimatedMarker(markers='←↖↑↗→↘↓↙'), ' ', ETA()]
         pbar    = ProgressBar(widgets=widgets, maxval=n_epochs).start()
         for i in range(n_epochs):
-            # for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
-            #     sess.run(training_step, feed_dict={x_flat: mb, d: labels})
-            # current_accuracy = sess.run(accuracy, feed_dict={x_flat: d_train, d: one_hot(l_train, 10)})
-            # print(current_accuracy)
             pbar.update(i)
             batch = mnist.train.next_batch(batch_size)
             sess.run(training_step, feed_dict={x_flat: batch[0], d: batch[1]})
