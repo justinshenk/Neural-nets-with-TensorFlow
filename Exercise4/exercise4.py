@@ -6,8 +6,8 @@ mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 if __name__ == "__main__":
     d_train, l_train, d_test, l_test, d_val, l_val = load_mnist_data()
-    batch_size = 100
-    n_epochs = 1000
+    batch_size = 50
+    n_epochs = 10000
 
     ############################################################################
     #                              Define network                              #
@@ -51,7 +51,10 @@ if __name__ == "__main__":
     ############################################################################
     
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, d))
-    training_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
+    # I also tried the gradient descent optimizer, but that did not improve
+    # performance withe learning rates 0.2, 0.5 or 0.8. Maybe one would hate to
+    # wait ridiculously long.
+    training_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
 
     ############################################################################
     #                           Accuracy computation                           #
@@ -78,7 +81,10 @@ if __name__ == "__main__":
             pbar.update(i)
             batch = mnist.train.next_batch(batch_size)
             sess.run(training_step, feed_dict={x_flat: batch[0], d: batch[1]})
-            if (i + 1) % 10 == 0:
-                curr_acc = sess.run(accuracy, feed_dict={ x_flat: batch[0], d: batch[1]})
+            if i > 1 and i % 50 == 0:
+                curr_acc = sess.run(accuracy, feed_dict={ x_flat: batch[0], d:
+                    batch[1] })
                 print("step %d, accuracy on current batch: %g" % (i, curr_acc))
+        test_acc = sess.run(accuracy, feed_dict={ x_flat: mnist.test.images, d: mnist.test.labels })
+        print("Final accuracy on test set: %g" % test_acc)
 
