@@ -4,8 +4,8 @@ from progressbar import * # sudo pip3 install progressbar33
 
 if __name__ == "__main__":
     d_train, l_train, d_test, l_test, d_val, l_val = load_mnist_data()
-    batch_size = 100
-    n_epochs = 50
+    batch_size = 1
+    n_epochs = 10
 
     ############################################################################
     #                              Define network                              #
