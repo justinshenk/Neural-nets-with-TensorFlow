@@ -1,4 +1,4 @@
-from utils import load_mnist_data, minibatches, one_hot
+# from utils import load_mnist_data, minibatches, one_hot
 import tensorflow as tf
 from progressbar import * # sudo pip3 install progressbar33
 from tensorflow.examples.tutorials.mnist import input_data
@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 if __name__ == "__main__":
-    batch_size = 50
+    batch_size = 1000
     n_epochs   = 10000
 
     ############################################################################
@@ -66,7 +66,8 @@ if __name__ == "__main__":
     # labels
     correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(d,1))
     accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    training_step_accuracy = []
+    training_step_accuracy  = []
+    validation_acc          = []
 
     ############################################################################
     #                              Train the net                               #
@@ -88,8 +89,12 @@ if __name__ == "__main__":
             if i > 1 and i % 50 == 0:
                 curr_acc = sess.run(accuracy, feed_dict={ x_flat: batch[0], d:
                     batch[1] })
+                curr_val_acc = sess.run(accuracy, feed_dict={ x_flat: mnist.validation.images,
+                    d: mnist.validation.labels })
+                validation_acc.append(curr_val_acc)
                 training_step_accuracy.append(curr_acc)
                 plt.plot(training_step_accuracy, color = "b")
+                plt.plot(validation_acc, color = "r")
                 plt.draw()
                 plt.pause(0.0001)
 
@@ -100,5 +105,6 @@ if __name__ == "__main__":
         test_acc = (test_acc1+test_acc2)/2
         print("Final accuracy on test set: %g" % test_acc)
         plt.plot(training_step_accuracy, color = "b")
+        plt.plot(validation_acc, color = "r")
         plt.ioff()
         plt.show()
