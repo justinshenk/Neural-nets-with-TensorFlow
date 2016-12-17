@@ -1,4 +1,3 @@
-# from utils import load_mnist_data, minibatches, one_hot
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,13 +5,13 @@ from utils import load_svhn_data, minibatches, one_hot
 from progressbar import * # sudo pip3 install progressbar33
 from network_builder import *
 
-RAND_SEED = np.random.randint(100)
+RAND_SEED = 0
 
 np.random.seed(RAND_SEED)
 
 if __name__ == "__main__":
 
-    batch_size = 1000
+    batch_size = 100
     n_epochs   = 1000
     learning_rate = 1e-2
     act_fun = tf.nn.elu
@@ -104,13 +103,18 @@ if __name__ == "__main__":
     batches = minibatches(d_train, l_train, batch_size=batch_size)
     training_step_accuracy  = []
     val_accuracy  = []
+    save_file = "./exercise5.ckpt"
     plt.ion()
     plt.gca().set_ylim([0,1])
     plt.gca().set_xlim([0,n_epochs/30])
 
 
     with tf.Session() as sess:
-        sess.run(tf.initialize_all_variables())
+        saver = tf.train.Saver()
+        if os.path.exists(save_file):
+            saver.restore(sess, save_file)
+        else:
+            sess.run(tf.initialize_all_variables())
         for i in range(n_epochs):
             pbar.update(i)
             data, labels = batches.__next__()
@@ -127,6 +131,7 @@ if __name__ == "__main__":
                 plt.pause(0.0001)
         test_acc = sess.run(accuracy, feed_dict={x: d_test, d: one_hot(l_test, 10)})
         print("Final accuracy on test set: %f" % test_acc)
+        saver.save(sess, save_file)
         plt.plot(training_step_accuracy, color = "b")
         plt.plot(val_accuracy, color = "b")
         plt.ioff()

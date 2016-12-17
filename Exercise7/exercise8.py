@@ -1,18 +1,13 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import minibatches, one_hot, load_mnist_data
+from utils import minibatches, one_hot, load_mnist_data, urand_vector
 from progressbar import * # sudo pip3 install progressbar33
 from network_builder import *
 
 RAND_SEED = 0
 
 np.random.seed(RAND_SEED)
-
-data_train, labels_train, data_test, labels_test, data_validation, labels_validation = load_mnist_data()
-batches = minibatches(data_train, labels_train, batch_size=32, loop=True)
-def next_batch():
-    return next(batches)
 
 def batch_normalize(batch):
     mean, variance = tf.nn.moments(batch, [0])
@@ -24,7 +19,7 @@ def batch_normalize(batch):
 if __name__ == "__main__":
 
     batch_size = 32
-    n_epochs   = 100
+    n_epochs   = 2
 
     tf.set_random_seed(RAND_SEED)
     tf.reset_default_graph()
@@ -33,12 +28,13 @@ if __name__ == "__main__":
     #                                Generator                                 #
     ############################################################################
     # Input layer
+    # inputs are batch_size vectors of length 100
     inputs = tf.placeholder(tf.float32, shape=[None, 100])
     batch_size = tf.shape(inputs)[0]
     
     with tf.variable_scope("gen_ff1"):
         ff1 = feedForwardLayer(inputs, 100, 512 * 4 * 4, None)
-        ff1_reshaped = tf.reshape(ff1, [100, 4, 4, 512])
+        ff1_reshaped = tf.reshape(ff1, [batch_size, 4, 4, 512])
         ff1_normalized = batch_normalize(ff1_reshaped)
         ff1_out = tf.nn.relu(ff1_normalized)
     with tf.variable_scope("gen_conv1"):
@@ -67,13 +63,11 @@ if __name__ == "__main__":
         conv3_normalized = batch_normalize(conv3)
         conv3_out = tf.nn.sigmoid(conv3_normalized + bias3)
 
-    images, labels = next_batch()
-    images = np.expand_dims(images, 3)
-    real_images = tf.Variable(images, trainable=False, dtype=tf.float32)
+    # slap together 32 real images and the output of conv3
+    real_images = tf.placeholder(tf.float32, shape=[32, 28, 28, 1])
     image_set = tf.concat(0, [conv3_out, real_images])
-    targets_distinguisher = tf.constant([0] * 32 + [1] * 32, shape=[64,1],
-            dtype=tf.float32)
-    targets_generator = tf.constant([1] * 32, shape=[32,1])
+    targets_distinguisher = tf.constant([0] * 32 + [1] * 32, shape=[64,1], dtype=tf.float32)
+    targets_generator = tf.constant([1] * 32, shape=[32,1], dtype=tf.float32)
 
     ########################################################################
     #                            Distinguisher                             #
@@ -93,18 +87,42 @@ if __name__ == "__main__":
         dist_conv4 = convLayer(dist_conv3, 5, 5, 256, 512, act_fun=tf.nn.elu,
                 strides=[1,2,2,1], padding='SAME')
     with tf.variable_scope("dist_ff1"):
-        dist_ff1 = feedForwardLayer(tf.reshape(dist_conv4, [-1, 64 * 28 * 28]),
-                64 * 28 * 28, 1, act_fun=None)
+        s = dist_conv4.get_shape().as_list()
+        dist_ff1 = feedForwardLayer(tf.reshape(dist_conv4, [-1, np.prod(s[1:])]),
+                np.prod(s[1:]), 1, act_fun=None) # do not apply activation function yet
 
-    # import ipdb; ipdb.set_trace()
-    cross_entropy_distinguisher = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(dist_ff1, targets_distinguisher))
+    cross_entropy_distinguisher = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(
+                dist_ff1, targets_distinguisher))
     optimizer_dist = tf.train.AdamOptimizer(0.0002)
-    optimizer_dist.minimize(cross_entropy_distinguisher, var_list=[v for v in
-        tf.trainable_variables() if 'dist' in v.name])
+    train_dist = optimizer_dist.minimize(cross_entropy_distinguisher, 
+            var_list=[v for v in tf.trainable_variables() if 'dist' in v.name])
 
-    cross_entropy_generator = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(conv3_out, targets_generator))
+    cross_entropy_generator = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(
+                tf.slice(dist_ff1, [32, 0], [-1, -1]), targets_generator))
     optimizer_gen = tf.train.AdamOptimizer(0.0002)
-    optimizer_gen.minimize(cross_entropy_generator, var_list=[v for v in tf.trainable_variables() if 'gen' in v.name])
+    train_gen = optimizer_gen.minimize(cross_entropy_generator, 
+            var_list=[v for v in tf.trainable_variables() if 'gen' in v.name])
 
-    pass
+    data_train, labels_train, _, _, _, _ = load_mnist_data() # the data is 55k samples
+    widgets = ['Training: ', Percentage(), ' ', AnimatedMarker(markers='←↖↑↗→↘↓↙'), ' ', ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=n_epochs*data_train.shape[0]//32).start()
+    i = 0
+
+    with tf.Session() as sess:
+        sess.run(tf.initialize_all_variables()) 
+        for epoch in range(n_epochs):
+            batches = minibatches(data_train, labels_train, batch_size=32)
+            for data, _ in batches:
+                pbar.update(i)
+                i += 1
+                random_vectors = urand_vector(shape=(32,100))
+                sess.run(train_gen, feed_dict={inputs: random_vectors,
+                    real_images: np.expand_dims(data, 3)})
+                sess.run(train_dist, feed_dict={inputs: random_vectors,
+                    real_images: np.expand_dims(data, 3)})
+        plt.imshow(conv3_out.eval()[0,:,:,0])
+        plt.show()
+                
 

@@ -48,7 +48,7 @@ def normalize(data):
         return data / data.max()
 
 def urand_vector(low=-1, high=1, shape=(1,100)):
-    return np.random.urandom(low, high ,shape)
+    return np.random.uniform(low, high ,shape)
 
 def one_hot(vector, slots):
     arr = np.zeros((len(vector), slots))

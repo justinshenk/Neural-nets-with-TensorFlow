@@ -34,7 +34,6 @@ def transposedConvLayer(inputs, kx, ky, channels, feature_maps, out_shape, act_f
                 seed=RAND_SEED))
     bias = tf.get_variable("bias", [feature_maps],
             initializer=tf.constant_initializer(.1))
-    import ipdb; ipdb.set_trace()
     convolution = tf.nn.conv2d_transpose(inputs, filter, out_shape, strides=strides, padding=padding)
     if act_fun:
         return act_fun(convolution + bias)
