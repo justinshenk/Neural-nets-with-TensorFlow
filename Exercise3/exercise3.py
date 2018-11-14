@@ -3,17 +3,21 @@ import tensorflow as tf
 from numpy.random import random_integers
 import matplotlib.pyplot as plt
 import struct
-from progressbar import * # sudo pip3 install progressbar33
+from progressbar import *  # sudo pip3 install progressbar33
 
 
 class MNIST():
-    def __init__(self, directory = "./"):
-        self.testData = np.reshape(self._load(directory + "t10k-images.idx3-ubyte"), (-1,28**2))
-        self.testLabels = self._load(directory + "t10k-labels.idx1-ubyte", True)
-        self.trainingData = np.reshape(self._load(directory + "train-images.idx3-ubyte"), (-1,28**2))
-        self.trainingLabels = self._load(directory + "train-labels.idx1-ubyte", True)
+    def __init__(self, directory="./"):
+        self.testData = np.reshape(
+            self._load(directory + "t10k-images.idx3-ubyte"), (-1, 28**2))
+        self.testLabels = self._load(directory + "t10k-labels.idx1-ubyte",
+                                     True)
+        self.trainingData = np.reshape(
+            self._load(directory + "train-images.idx3-ubyte"), (-1, 28**2))
+        self.trainingLabels = self._load(directory + "train-labels.idx1-ubyte",
+                                         True)
 
-    def _load(self, path, labels = False):
+    def _load(self, path, labels=False):
 
         with open(path, "rb") as fd:
             magic, numberOfItems = struct.unpack(">ii", fd.read(8))
@@ -22,33 +26,36 @@ class MNIST():
 
             if not labels:
                 rows, cols = struct.unpack(">II", fd.read(8))
-                images = np.fromfile(fd, dtype = 'uint8')
+                images = np.fromfile(fd, dtype='uint8')
                 images = images.reshape((numberOfItems, rows, cols))
                 return images
             else:
-                labels = np.fromfile(fd, dtype = 'uint8')
+                labels = np.fromfile(fd, dtype='uint8')
                 return labels
+
 
 def import_data():
     n_train = 55000
-    m                 = MNIST()
-    data_train        = m.trainingData[:n_train]
-    labels_train      = m.trainingLabels[:n_train]
+    m = MNIST()
+    data_train = m.trainingData[:n_train]
+    labels_train = m.trainingLabels[:n_train]
 
-    data_test         = m.testData
-    labels_test       = m.testLabels
-    data_validation   = m.trainingData[n_train:]
+    data_test = m.testData
+    labels_test = m.testLabels
+    data_validation = m.trainingData[n_train:]
     labels_validation = m.trainingLabels[n_train:]
 
-    return data_train, labels_train, data_test, labels_test#, data_validation, labels_validation
+    return data_train, labels_train, data_test, labels_test  #, data_validation, labels_validation
+
 
 def import_data_tf():
     from tensorflow.examples.tutorials.mnist import input_data
     mnist = input_data.read_data_sets('/tmp/data', one_hot=False)
     return mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
 
+
 def plot_weights(current_weights):
-    f, axarr = plt.subplots(2,5)
+    f, axarr = plt.subplots(2, 5)
     f.tight_layout()
     f.subplots_adjust(hspace=.05, wspace=.05)
     axarr_linear = np.reshape(axarr, 10)
@@ -56,11 +63,12 @@ def plot_weights(current_weights):
     plt.setp([a.get_yticklabels() for a in axarr_linear], visible=False)
 
     for col in range(current_weights.shape[1]):
-        weights = np.reshape(current_weights[:,col], (28,28))
+        weights = np.reshape(current_weights[:, col], (28, 28))
         axarr_linear[col].imshow(weights, cmap='seismic')
 
+
 def plot_some_digits(d_train, l_train):
-    f, axarr = plt.subplots(5,2)
+    f, axarr = plt.subplots(5, 2)
     f.tight_layout()
     f.subplots_adjust(hspace=.05, wspace=.05)
     axarr_linear = np.reshape(axarr, 10)
@@ -69,13 +77,16 @@ def plot_some_digits(d_train, l_train):
 
     indices = random_integers(0, d_train.shape[0], size=10)
     for i, index in enumerate(indices):
-        axarr_linear[i].imshow(np.reshape(d_train[index,:], (28,28)), cmap='gray')
-        axarr_linear[i].text(-10,20,"{}".format(l_train[index]))
+        axarr_linear[i].imshow(
+            np.reshape(d_train[index, :], (28, 28)), cmap='gray')
+        axarr_linear[i].text(-10, 20, "{}".format(l_train[index]))
+
 
 def one_hot(vector, slots):
     arr = np.zeros((len(vector), slots))
     arr[range(len(vector)), vector] = 1
-    return arr;
+    return arr
+
 
 def minibatches(data, labels, batch_size=1000):
     """Data must be in Nx784 shape.
@@ -86,12 +97,10 @@ def minibatches(data, labels, batch_size=1000):
     data = data[indices, :]
     labels = labels[indices]
     for batch in np.arange(0, data.shape[0], batch_size):
-        if batch + batch_size > data.shape[0]: # if data size does not divide evenly, make final batch smaller
+        if batch + batch_size > data.shape[0]:  # if data size does not divide evenly, make final batch smaller
             batch_size = data.shape[0] - batch
-        yield (
-                data[batch:batch+batch_size,:],
-                one_hot(labels[batch:batch+batch_size], 10)
-                )
+        yield (data[batch:batch + batch_size, :],
+               one_hot(labels[batch:batch + batch_size], 10))
 
 
 def main():
@@ -119,17 +128,17 @@ def main():
 
     # computed output of the network without activation (?? otherwise can't use
     # tf.nn.softmax_..). Does this only work because there is just one layer?
-    y = tf.matmul(x,W) + b
+    y = tf.matmul(x, W) + b
 
     # loss function
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, d)
-    optimizer     = tf.train.GradientDescentOptimizer(learning_rate=0.5)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.5)
     training_step = optimizer.minimize(cross_entropy)
 
     # check if neuron firing strongest coinceds with max value position in real
     # labels
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(d, 1))
-    accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     # plot_some_digits(d_train, l_train)
     training_step_accuracy = []
@@ -138,13 +147,23 @@ def main():
     with tf.Session() as sess:
         sess.run(tf.initialize_all_variables())
         print("Training on my data.")
-        widgets = ['Training: ', Percentage(), ' ', AnimatedMarker(markers='←↖↑↗→↘↓↙'), ' ', ETA()]
-        n_iter  = 1000 # must be >= 10
-        pbar    = ProgressBar(widgets=widgets, maxval=n_iter).start()
+        widgets = [
+            'Training: ',
+            Percentage(), ' ',
+            AnimatedMarker(markers='←↖↑↗→↘↓↙'), ' ',
+            ETA()
+        ]
+        n_iter = 1000  # must be >= 10
+        pbar = ProgressBar(widgets=widgets, maxval=n_iter).start()
         for i in range(n_iter):
-            for mb, labels in minibatches(d_train, l_train, batch_size=batch_size):
+            for mb, labels in minibatches(
+                    d_train, l_train, batch_size=batch_size):
                 sess.run(training_step, feed_dict={x: mb, d: labels})
-            current_accuracy = sess.run(accuracy, feed_dict={x: d_train, d: one_hot(l_train, 10)})
+            current_accuracy = sess.run(
+                accuracy, feed_dict={
+                    x: d_train,
+                    d: one_hot(l_train, 10)
+                })
             training_step_accuracy.append(current_accuracy)
             pbar.update(i)
             # print("Current accuracy %f" % current_accuracy)
@@ -154,15 +173,18 @@ def main():
 
         pbar.finish()
         plt.show()
-        print("Final test accuracy: %f" % sess.run(accuracy, feed_dict={x:
-            d_test, d: one_hot(l_test, 10)}))
+        print("Final test accuracy: %f" % sess.run(
+            accuracy, feed_dict={
+                x: d_test,
+                d: one_hot(l_test, 10)
+            }))
         print("min/max training accuracy: %f/%f" %
-                (np.min(training_step_accuracy), np.max(training_step_accuracy)))
+              (np.min(training_step_accuracy), np.max(training_step_accuracy)))
 
-
-    plt.plot(training_step_accuracy, color = "b")
-    plt.gca().set_ylim([0,1])
+    plt.plot(training_step_accuracy, color="b")
+    plt.gca().set_ylim([0, 1])
     plt.show()
+
 
 if __name__ == "__main__":
     main()
